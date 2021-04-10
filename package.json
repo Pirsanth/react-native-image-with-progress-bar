@@ -1,15 +1,17 @@
 {
   "name": "react-native-image-with-progress-bar",
   "title": "React Native Image With Progress Bar",
-  "version": "1.0.0",
-  "description": "TODO",
+  "version": "1.0.8",
+  "description": "A react-native image component that uses the content-length HTTP header to display a progress bar showing the progress of downloading an image from a http url",
   "main": "index.js",
   "files": [
     "README.md",
     "android",
     "index.js",
     "ios",
-    "react-native-image-with-progress-bar.podspec"
+    "react-native-image-with-progress-bar.podspec",
+    "ImageWithSpinner.android.js",
+    "ImageWithSpinner.ios.js"
   ],
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -20,7 +22,21 @@
     "baseUrl": "https://github.com/Pirsanth/react-native-image-with-progress-bar"
   },
   "keywords": [
-    "react-native"
+    "react-native",
+    "image",
+    "progressbar",
+    "progress-bar",
+    "image-progressbar",
+    "image-progress-bar",
+    "spinner",
+    "image-spinner",
+    "activity-indicator",
+    "activityindicator",
+    "loading",
+    "loading-image",
+    "image-loading",
+    "react-native-loading-image",
+    "react-native-image-loading"
   ],
   "author": {
     "name": "Pirsanth",

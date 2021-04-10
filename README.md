@@ -1,10 +1,9 @@
 # 	react-native-image-with-progress-bar
 | iOS  | Android | Description |
 | ------------- | ------------- |------------- |
-| <img src="./gifs/iosDefaultProgressBar.gif" width="300" height="150">  | <img src="./gifs/androidDefaultProgressBar.gif" width="300" height="150">  | Default progress bar |
-| 
-<img src="./gifs/iosCustomColorProgressBar.gif" width="300" height="150">  | <img src="./gifs/androidCustomColorProgressBar.gif" width="300" height="150">  | Progress bar with **barColor="red"** and **trackColor="black"**|
-| <img src="./gifs/iosNoContentLengthProgressBar.gif" width="300" height="150">   | <img src="./gifs/androidNoContentLengthProgressBar.gif" width="300" height="150">   | If there is no Content-Length http header in the http response for the imageUrl, it switches from displaying a progress bar to displaying a spinner.|
+|<img src="./gifs/iosDefaultProgressBar.gif" width="300" height="150">| <img src="./gifs/androidDefaultProgressBar.gif" width="300" height="150">| Default progress bar |
+|<img src="./gifs/iosCustomColorProgressBar.gif" width="300" height="150">  | <img src="./gifs/androidCustomColorProgressBar.gif" width="300" height="150">| Progress bar with **barColor="red"** and **trackColor="black"**|
+<img src="./gifs/iosNoContentLengthProgressBar.gif" width="300" height="150">|<img src="./gifs/androidNoContentLengthProgressBar.gif" width="300" height="150">|If there is no Content-Length http header in the http response for the imageUrl, it switches from displaying a progress bar to displaying a spinner|
 
 A react-native image component that uses the content-length HTTP header to display a progress bar showing the 
 progress of downloading an image from a http url. If there is no content-length HTTP header, 
@@ -16,6 +15,7 @@ It will switch from a progress bar to a spinner (because it cannot estimate the 
 ***then cd into the ios project directory and run pod install***
 
 `$ cd ios`
+
 `$ pod install`
 ___
 
@@ -37,7 +37,7 @@ const App = () => {
       alignItems: 'center',
       justifyContent: 'center'
     }}>
-      <ImageWithSpinner 
+      <ImageWithProgressBar 
           mode="bar"
           barColor="red"
           trackColor="black"
@@ -66,19 +66,20 @@ ___
 | Name  | Type | Description |
 | ------------- | ------------- |------------- |
 | style  | object or array  |The same style prop that react-native's View component accepts   |
-| trackColor  | string  |This prop is exactly as you'd define borderColor or backgroundColor in react-native. For example "rgb(70,130,180)" or "steelblue"|
-| barColor  | string  |This prop is exactly as you'd define borderColor or backgroundColor in react-native. For example "rgb(70,130,180)" or "steelblue"|
-| mode  | string ("bar" or "spinner")  |If the mode is "bar" it will display a progress bar unless the http response of the given imageUrl does not have a Content-Length header, in which case it will switch to displaying a spinner. If mode is "spinner" it will always display a spinner. The default mode is "bar"|
+| trackColor  | string  |This prop is exactly the same as how you'd define borderColor or backgroundColor in react-native. For example "rgb(70,130,180)" or "steelblue"|
+| barColor  | string  |This prop is exactly the same as how you'd define borderColor or backgroundColor in react-native. For example "rgb(70,130,180)" or "steelblue"|
+| mode  | string ("bar" or "spinner")  |If the mode is "bar" it will display a progress bar unless the http response of the given imageUrl does not have a Content-Length header, in which case it will switch to displaying a spinner. If mode is "spinner" it will always display a spinner. The default mode is "bar" which is used if no mode prop is set|
 | imageUrl  | string  |The url with the image to load|
-| onLoadError  | callback  |This is called with an object containing an error message describing the error that occured. Errors include serious ones like problems retreiving the body of the http request with the given imageUrl or problems decoding the data in the http response body into an image for which no image will be displayed. But an **error is also sent in the lesser case where there is no Content-Length header in the http response**. In the latter case, the image will still load (assuming the data can be decoded into an image)  |
-**Pro tip**: You can specify a transparent barColor or trackColor like this: "rgba(70,130,180, 0.4)". 0.4 is the opacity or alpha value.
+ onLoadError  | callback  |This is called with an object containing an error message describing the error that occured. Errors include serious ones like problems retreiving the body of the http request with the given imageUrl or problems decoding the data in the http response body into an image for which no image will be displayed. But an **error is also sent in the lesser case where there is no Content-Length header in the http response**. In the latter case, the image will still load (assuming the data can be decoded into an image)  |
+ 
+**Pro tip**: You can specify a transparent barColor or trackColor like this: `"rgba(70,130,180, 0.4)"`. 0.4 is the opacity or alpha value.
 ___
 
 ## Implementation Notes
 
 #### How I set the layout
 ##### Android: 
-I made an xml used the design view to set the layout. Then inflated the xml
+I made an xml and used the design view to set the layout. I then inflated the xml.
 ##### iOS:
 I set the layout in code because I could not find out what method is ran when the view resizes itself (layoutSubviews of UIView is not ran and there are no clues in RCTViewManager or RCTBridgeModule). So I set out the subviews and the auto layout constraints in code.
 
@@ -112,18 +113,18 @@ One crucial detail pertaining to the way in which we get progress updates of the
                         //it may read less than the length/available or it might be -1
                         totalAlreadyRead += amountActuallyRead;
 ```
-In the code above, I used `inputStream.available();` to ge the maximum that can be read from an input stream without blocking [6]. If it fails to return a value I set the chunk size to the size of the content length. I prefer using the max size of the file rather than some arbitrarily large number for the Len argument. The `inputStream.read();` method returns the number of bytes that were actually read anyway. If the content-length is not present, I use the arbitary value of 512 bytes.
+In the code above I used `inputStream.available();` to get the maximum that can be read from an input stream without blocking [6]. If it fails to return a value, I set the chunk size to the size of the content length. I prefer using the maximum size of the file (the content-length) rather than some arbitarily large number for the len argument. In any case, the `inputStream.read();` method returns the number of bytes that were actually read. If the content-length is not present, I use the arbitary value of 512 bytes.
 
 
 ##### iOS:
-used the URLSession:downloadTask:didWriteData:totalBytesWritten:totalBytesExpectedToWrite: method to get the download progress which was far more straight forward
+I used the URLSession:downloadTask:didWriteData:totalBytesWritten:totalBytesExpectedToWrite: method to get the download progress which was far more straight forward
 
 
 #### How i got the barColor and trackColor props working
-I wanted it to behave like the borderColor property in react-native's style prop. So i looked into how react-native parses the style object for its Views. I ended up using the code iOS uses for the components shipped with react-native like View or Button.
+I wanted it to behave like the borderColor key in react-native's style prop. So i looked into how react-native parses the style object for its Views. I ended up using the code iOS uses for the components shipped with react-native like View or Button.
 
 ##### Describing how iOS registers the components that ship with react-native
-If we look into the Podfile in the ios directory of a react-native project (./ios/Podfile) we get:
+If we look into the Podfile in the ios directory of a react-native project (`./ios/Podfile`) we get:
 ```ruby
 require_relative '../node_modules/react-native/scripts/react_native_pods'
 require_relative '../node_modules/@react-native-community/cli-platform-ios/native_modules'
@@ -147,16 +148,16 @@ If we follow the code in the first require_relative, we learn that the code for 
 The processColor function return a different output depending on the platform react-native is running on. I shall now describe how I used the output from the processColor function for each platform.
 
 ##### Android: 
-On android the processColor function returns a 32 bit *signed* integer representing the color. Using the int in android to set the backgroundColor was quite straightforward because most arguments for color in android simply accept the int returned from processColor. There was the minor process of making a ColorStateList from the given int for which i used the StackOverflow link in [5] as well
+On android the processColor function returns a 32 bit *signed* integer representing the color. Using the int in android to set the backgroundColor was quite straightforward because most arguments for color in android simply accept the int returned from processColor (like in `android.view.View.setBackgroundColor`). There was the minor detail of making a ColorStateList from the given int for which i used the StackOverflow link in [5] as well.
 ##### iOS:
-In iOS, the processColor function returns an a 32 bit *unsigned* integer representing the color instead. The process of using the output of the processColor function in iOS was a bit more involved as the I had to convert the int to a UIColor. I used all the links in [4] to write getUIColorForInt in PIRImageWithSpinnerManager.m. This includes the rgb and alpha value in UIColor.
+In iOS, the processColor function returns an a 32 bit *unsigned* integer representing the color instead. The procedure to use the output of the processColor function in iOS was a bit more involved as I had to convert the int to a UIColor. I used all the links in [4] to write the getUIColorForInt method in PIRImageWithSpinnerManager.m. This includes the rgb and alpha value contained in the integer in UIColor.
 
 #### How I fixed the border props issue on Android
 ##### Android only: 
-On android when we make a custom UI component and pass in `style={{borderWidth: 1}}` a border does not get set. Similarly, the borderColor, borderRadius styles do not work as well. This problem only occurs on Android it works fine in iOS.
+On android when we make a custom UI component and pass in `style={{borderWidth: 1}}` a border does not get set. Similarly, the borderColor and borderRadius styles do not work as well. This problem only occurs on Android it works fine on iOS.
 
 I tried digging into the Java code to figure out why it was happening. I learned that LayoutShadowNode’s setBorderWidths is 
-being called and the border is being set in yoga. However the line `mYogaNode.setBorder(YogaEdge.fromInt(spacingType), borderWidth);` (line 943 of ReactShadowNodeImpl) does not seem to have any effect.
+being called and the border is being set in yoga. However, the line `mYogaNode.setBorder(YogaEdge.fromInt(spacingType), borderWidth);` (line 943 of ReactShadowNodeImpl) does not seem to have any effect.
 ##### How I solved it:
 ```javascript
      <View
@@ -177,18 +178,18 @@ being called and the border is being set in yoga. However the line `mYogaNode.se
 
 I simply wrapped the native component in a View and passed the `props.style` to the wrapping View. I got the idea for this from the official react-native guide for iOS Native UI components [7].
 
-That is why when no style prop is passed in to the react-native-image-with-progress-bar component **on Android** it takes up the full width and height of its parent container. I left it like this because I feared that validating the style prop myself will bring about more problems and unaccounted for edge cases. 
+This is why when no style prop is passed to the react-native-image-with-progress-bar component **on Android** it takes up the full width and height of its parent container. I left it like this because I feared that validating the style prop myself will bring about more problems and unaccounted for edge cases. 
 
-(FYI: on iOS if no style prop is passed the component will not be rendered. This same thing occurs with react-native's Image component).
+(FYI: on iOS if no style prop is passed the component will not be rendered. This behaviour mirrors react-native's Image component).
 
 #### Miscellaneous
 * Written in **Java** and **Objective-C**
 
 * Has no third party libraries like Glide or AFNetworking because I wanted to challenge myself
 
-* For android I made the spinner a fixed height because I notice that in iOS the ActivityIndicator is a fixed height as well (not proportional to the screen) and I approximated its dimensions and set it to equal for Android
+* For android I made the spinner a fixed height and width because I notice that in iOS the ActivityIndicator is a fixed height and width as well (does not change proportionally with the screen size). So I approximated the dimensions of the ActivityIndicator on iOS and on Android i set the spinner's width and height to equal the aforementioned approximated dimensions.
 
-* It throws a Redbox error if the mode prop is not “bar” or “spinner”, might seem extreme but I did it because I thought looks cool. On android I still haven’t figured out how to remove the “null” in the Redbox screen. Ive tried throwing all kinds of errors from react-native and Java.
+* It throws a Redbox error if the mode prop is not “bar” or “spinner”. It might seem extreme but I did it because I thought looks cool. On android I still haven’t figured out how to remove “null” from the Redbox screen. I've tried throwing all kinds of errors from react-native and Java.
 
 * I used create-react-native-library to create the boiler plate
 
@@ -196,17 +197,15 @@ That is why when no style prop is passed in to the react-native-image-with-progr
 ___
 
 ## References
-1. [A Stackoverflow that thought me how to download an image in Android in chunks (so we can get the progress)](https://stackoverflow.com/questions/38940382/downloading-image-via-asynctask-and-displaying-it-in-an-imageview-without-storin)
+1. [A Stackoverflow that thought me how to download an image on Android in chunks (so we can get the progress)](https://stackoverflow.com/questions/38940382/downloading-image-via-asynctask-and-displaying-it-in-an-imageview-without-storin)
 2. [I used the official Android guides to update the code in the SO link above as AsyncTask has been deprecated](https://developer.android.com/guide/background/threading)
 
-3. [The Stanford iOS objective-C Lecture series which forms the basis of my understanding of iOS development](https://www.youtube.com/channel/UCxYl0ECy6PM11VzsW943cQA/featured)
+3. [The Stanford iOS Objective-C Lecture series which forms the basis of my understanding of iOS development](https://www.youtube.com/channel/UCxYl0ECy6PM11VzsW943cQA/featured)
 
-4. I used the Stack Overflow links below to figure out how to convert  unsigned 32 bit integers to UIColor [Link1](https://stackoverflow.com/questions/19405228/how-to-i-properly-set-uicolor-from-int) | [Link2](https://stackoverflow.com/questions/28644311/how-to-get-the-rgb-code-int-from-an-uicolor-in-swift)| [Link3](https://stackoverflow.com/questions/38670418/how-to-convert-a-uicolor-to-uint32-i-get-the-error-ambiguous-use-of-operator)
+4. I used the Stack Overflow links below to figure out how to convert unsigned 32 bit integers to UIColor [Link1](https://stackoverflow.com/questions/19405228/how-to-i-properly-set-uicolor-from-int) | [Link2](https://stackoverflow.com/questions/28644311/how-to-get-the-rgb-code-int-from-an-uicolor-in-swift)| [Link3](https://stackoverflow.com/questions/38670418/how-to-convert-a-uicolor-to-uint32-i-get-the-error-ambiguous-use-of-operator)
 
 5. [How to create ColorStateList programatically](https://stackoverflow.com/questions/15543186/how-do-i-create-colorstatelist-programmatically)
 
 6. [Android API docs on Input Stream](https://developer.android.com/reference/java/io/InputStream#available())
 
-7. [The react-native ios Native UI Components guide gave me the idea to wrap the Android component in a View](https://reactnative.dev/docs/native-components-ios#styles)
-
-
+7. [The react-native iOS Native UI Components guide gave me the idea to wrap the Android component in a View](https://reactnative.dev/docs/native-components-ios#styles)
